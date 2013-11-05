@@ -17,6 +17,11 @@
 # limitations under the License.
 #
 
+service_provider = nil
+if node['platform_version'].to_f >= 13.10
+  service_provider = ::Chef::Provider::Service::Upstart
+end
+
 def listen_addr_for(interface, type)
   interface_node = node['network']['interfaces'][interface]['addresses']
   interface_node.select { |address, data| data['family'] == type }.keys[0]
@@ -27,6 +32,7 @@ node['openssh']['package_name'].each do |name|
 end
 
 service 'ssh' do
+  provider service_provider if service_provider
   service_name node['openssh']['service_name']
   supports value_for_platform(
     'debian' => { 'default' => [:restart, :reload, :status] },
